@@ -19,4 +19,8 @@ const getImages = async (searchSubject, page) => {
   return response.data;
 };
 
-export { getImages };
+const getPerPage = () => {
+  return searchParams.get('per_page');
+};
+
+export { getImages, getPerPage };

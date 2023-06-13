@@ -5,6 +5,7 @@ import Loader from 'components/Loader';
 import Modal from 'components/Modal';
 import Searchbar from 'components/Searchbar';
 import React, { Component } from 'react';
+import { Notify } from 'notiflix';
 import * as API from 'services/api';
 
 class App extends Component {
@@ -12,12 +13,20 @@ class App extends Component {
     images: [],
     searchSubject: '',
     largeImageURL: '',
+    showButton: false,
     page: 1,
     isLoading: false,
     openModal: false,
   };
 
   fetchFirstImages = searchSubject => {
+    this.setState({ showButton: false });
+    if (searchSubject === '') {
+      Notify.info('Ви не ввели тему пошуку!', {
+        timeout: 3000,
+      });
+      return;
+    }
     this.setState({ searchSubject: searchSubject, page: 1 }, async () => {
       try {
         this.setState({ images: [], isLoading: true });
@@ -26,6 +35,11 @@ class App extends Component {
           this.state.page
         );
         setTimeout(() => {
+          if (images.hits.length < API.getPerPage()) {
+            this.setState({ showButton: false });
+          } else {
+            this.setState({ showButton: true });
+          }
           this.setState({ images: images.hits, isLoading: false });
         }, 1000);
       } catch (error) {
@@ -35,6 +49,7 @@ class App extends Component {
   };
 
   fetchMoreImages = () => {
+    this.setState({ showButton: false });
     this.setState(
       prevState => {
         return { page: prevState.page + 1 };
@@ -47,6 +62,11 @@ class App extends Component {
             this.state.page
           );
           setTimeout(() => {
+            if (images.hits.length < API.getPerPage()) {
+              this.setState({ showButton: false });
+            } else {
+              this.setState({ showButton: true });
+            }
             this.setState(prevState => ({
               images: [...prevState.images, ...images.hits],
               isLoading: false,
@@ -90,9 +110,12 @@ class App extends Component {
           />
         </ImageGallery>
         {isLoading && <Loader />}
-        {images.length !== 0 ? (
+        {this.state.showButton && (
           <Button fetchMoreImages={this.fetchMoreImages} />
-        ) : null}
+        )}
+        {/* {images.length !== 0 ? (
+          <Button fetchMoreImages={this.fetchMoreImages} />
+        ) : null} */}
         {openModal && (
           <Modal
             largeImageURL={this.state.largeImageURL}
